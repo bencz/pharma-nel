@@ -51,7 +51,7 @@ This platform enables pharmaceutical professionals to:
 │                                                                             │
 │   Edges: drug_has_substance, drug_has_route, drug_has_form, drug_in_class,  │
 │          drug_by_manufacturer, drug_has_label, drug_causes_reaction,        │
-│          drug_interacts_with, profile_has_extraction, ...                  │
+│          drug_interacts_with, profile_has_extraction, ...                   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -68,7 +68,7 @@ This platform enables pharmaceutical professionals to:
 
 ```bash
 git clone <repository-url>
-cd pharma-knowledge-new
+cd pharma-nel
 
 # Set required environment variables
 export OPENAI_API_KEY=sk-your-key-here
