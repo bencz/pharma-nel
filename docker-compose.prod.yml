@@ -1,0 +1,129 @@
+# =============================================================================
+# Pharma Knowledge - Production Docker Compose
+# =============================================================================
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+#
+# Features:
+# - Gunicorn with Uvicorn workers for high performance
+# - Multiple workers based on CPU cores (formula: 2*CPU + 1)
+# - No volume mounts (uses built image)
+# - Production logging (JSON format)
+# - Resource limits and health checks
+#
+# Required Environment Variables:
+# - OPENAI_API_KEY: OpenAI API key for NER extraction
+# - ARANGO_PASSWORD: ArangoDB root password
+#
+# Optional Environment Variables:
+# - FDA_API_KEY: Increases FDA API rate limits
+# - WORKERS: Number of gunicorn workers (default: 4)
+# =============================================================================
+
+services:
+  # =============================================================================
+  # Backend
+  # =============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # ArangoDB connection (Docker network)
+      - ARANGO_HOST=http://arangodb:8529
+      - ARANGO_DATABASE=pharma_ner
+      - ARANGO_USER=${ARANGO_USER:-root}
+      - ARANGO_PASSWORD=${ARANGO_PASSWORD}
+      # OpenAI (required for NER)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
+      # FDA API (optional - increases rate limits)
+      - FDA_API_KEY=${FDA_API_KEY:-}
+      # Production settings
+      - ENV=production
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_JSON=true
+      # CORS (configure for your domain)
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:3000"]}
+      # Worker settings (adjust based on CPU cores)
+      # Formula: (2 * CPU cores) + 1
+      - WORKERS=${WORKERS:-4}
+      - WORKER_TIMEOUT=${WORKER_TIMEOUT:-120}
+      - KEEPALIVE=${KEEPALIVE:-5}
+      - MAX_REQUESTS=${MAX_REQUESTS:-1000}
+    depends_on:
+      - arangodb
+    # No volumes in production - uses built image
+    # No command override - uses Dockerfile CMD (gunicorn)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - pharma-network
+
+  # =============================================================================
+  # Next.js Frontend (Production)
+  # =============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: docker/Dockerfile.prod
+      args:
+        NEXT_PUBLIC_PHARMA_API_URL: ${NEXT_PUBLIC_PHARMA_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - pharma-network
+
+  # =============================================================================
+  # ArangoDB (Production)
+  # =============================================================================
+  arangodb:
+    image: arangodb:latest
+    ports:
+      - "8529:8529"
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_PASSWORD}
+    volumes:
+      - arango_data:/var/lib/arangodb3
+    command: ["arangod", "--server.endpoint", "tcp://0.0.0.0:8529", "--vector-index"]
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    networks:
+      - pharma-network
+
+volumes:
+  arango_data:
+    driver: local
+
+networks:
+  pharma-network:
+    driver: bridge

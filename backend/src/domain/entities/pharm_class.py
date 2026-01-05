@@ -1,0 +1,40 @@
+"""
+PharmClass Domain Entity.
+
+Pharmacological classification.
+"""
+
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any, Self
+
+
+@dataclass(slots=True)
+class PharmClass:
+    """Pharmacological class (EPC, MOA, PE, CS)."""
+
+    key: str
+    name: str
+    class_type: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        now = datetime.now(UTC).isoformat()
+        return {
+            "_key": self.key,
+            "name": self.name,
+            "class_type": self.class_type,
+            "created_at": self.created_at or now,
+            "updated_at": now,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls(
+            key=data.get("_key", data.get("key", "")),
+            name=data.get("name", ""),
+            class_type=data.get("class_type"),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at"),
+        )
