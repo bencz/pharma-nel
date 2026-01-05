@@ -23,6 +23,23 @@ Modern, professional frontend for the Pharma Knowledge NER/NEL Intelligence Plat
 - **SMILES Rendering** - Chemical structure visualization via PubChem
 - **Entity Search** - Search the knowledge graph
 
+## Screenshots
+
+### Landing Page
+![Landing Page](./images/front_landing_page.png)
+
+### Extractions Page
+![Extractions Page](./images/front_extractions_page.png)
+
+### Profile View
+![Profile View](./images/front_profile.png)
+
+### Substance Details
+![Substance Details](./images/front_substance_details.png)
+
+### Search
+![Search](./images/front_search.png)
+
 ## Getting Started
 
 ### Prerequisites
