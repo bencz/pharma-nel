@@ -92,11 +92,16 @@ services:
       - arango_data:/var/lib/arangodb3
     command: ["arangod", "--server.endpoint", "tcp://0.0.0.0:8529", "--vector-index"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8529/_api/version"]
-      interval: 30s
+      test: ["CMD", "sh", "-c", "/usr/bin/arangosh --server.endpoint tcp://127.0.0.1:8529 --server.authentication true --server.username root --server.password $$ARANGO_ROOT_PASSWORD --javascript.execute-string 'db._version()'"]
+      interval: 10s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     networks:
       - pharma-network
 
