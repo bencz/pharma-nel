@@ -42,7 +42,8 @@ services:
       # CORS (allow frontend)
       - CORS_ORIGINS=["http://localhost:3000","http://frontend:3000"]
     depends_on:
-      - arangodb
+      arangodb:
+        condition: service_healthy
     volumes:
       # Mount source for hot-reload
       - ./backend/src:/app/src:ro
@@ -90,6 +91,12 @@ services:
     volumes:
       - arango_data:/var/lib/arangodb3
     command: ["arangod", "--server.endpoint", "tcp://0.0.0.0:8529", "--vector-index"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8529/_api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
       - pharma-network
 

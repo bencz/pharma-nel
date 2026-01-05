@@ -54,7 +54,8 @@ services:
       - KEEPALIVE=${KEEPALIVE:-5}
       - MAX_REQUESTS=${MAX_REQUESTS:-1000}
     depends_on:
-      - arangodb
+      arangodb:
+        condition: service_healthy
     # No volumes in production - uses built image
     # No command override - uses Dockerfile CMD (gunicorn)
     healthcheck:
@@ -81,7 +82,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: docker/Dockerfile.prod
+      dockerfile: docker/Dockerfile
       args:
         NEXT_PUBLIC_PHARMA_API_URL: ${NEXT_PUBLIC_PHARMA_API_URL:-http://localhost:8000}
     ports:
@@ -112,6 +113,12 @@ services:
     volumes:
       - arango_data:/var/lib/arangodb3
     command: ["arangod", "--server.endpoint", "tcp://0.0.0.0:8529", "--vector-index"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8529/_api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s    
     restart: unless-stopped
     deploy:
       resources:
