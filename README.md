@@ -89,7 +89,7 @@ This starts:
 ### 3. Start Services (Production)
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 
